@@ -944,7 +944,7 @@ body::before {
       Tu camarero ya fue avisado ✓
     </p>
     <button class="modal-next" onclick="nextClient()">
-      → Siguiente cliente
+      ¡Gracias por participar!
     </button>
   </div>
 </div>
@@ -1222,40 +1222,36 @@ function drawWheel(rotation) {
 
     // Label
     const midAngle = sa + ARC / 2;
-    const textDist = R * 0.62;
-    const tx = cx + Math.cos(midAngle) * textDist;
-    const ty = cy + Math.sin(midAngle) * textDist;
+    const seg      = SEGMENTS[i];
+    const lines    = seg.name.replace('\n', ' ').split(' ');
+    const fontSize = Math.max(8, Math.min(11, S / 38));
 
     ctx.save();
-    ctx.translate(tx, ty);
-    ctx.rotate(midAngle + Math.PI / 2);
+    ctx.translate(cx, cy);
+    // Rotate so text reads radially outward from center
+    ctx.rotate(midAngle);
 
-    const seg      = SEGMENTS[i];
-    const lines    = seg.name.split('\n');
-    const fontSize = Math.max(8.5, Math.min(12.5, S / 36));
     ctx.font = `500 ${fontSize}px 'Gotham', sans-serif`;
     ctx.fillStyle    = seg.text;
-    ctx.textAlign    = 'center';
+    ctx.textAlign    = 'left';
     ctx.textBaseline = 'middle';
+    ctx.letterSpacing = '0.04em';
 
-    if (lines.length > 1) {
-      const lh = fontSize * 1.25;
-      lines.forEach((line, li) => {
-        const offset = (li - (lines.length - 1) / 2) * lh;
-        ctx.fillText(line, 0, offset);
-      });
+    // Measure all words to decide layout
+    const fullName  = seg.name.replace('\n', ' ');
+    const available = R * 0.52;
+    const measured  = ctx.measureText(fullName).width;
+    const startX    = R * 0.18; // start from inner ring outward
+
+    if (measured <= available) {
+      ctx.fillText(fullName, startX, 0);
     } else {
-      // Auto-wrap if too wide
-      const available = R * 0.44;
-      if (ctx.measureText(seg.name).width > available) {
-        const words = seg.name.split(' ');
-        const half  = Math.ceil(words.length / 2);
-        const lh    = fontSize * 1.25;
-        ctx.fillText(words.slice(0, half).join(' '), 0, -lh / 2);
-        ctx.fillText(words.slice(half).join(' '),     0,  lh / 2);
-      } else {
-        ctx.fillText(seg.name, 0, 0);
-      }
+      // Two lines stacked
+      const words = fullName.split(' ');
+      const half  = Math.ceil(words.length / 2);
+      const lh    = fontSize * 1.3;
+      ctx.fillText(words.slice(0, half).join(' '), startX, -lh / 2);
+      ctx.fillText(words.slice(half).join(' '),    startX,  lh / 2);
     }
     ctx.restore();
   }
